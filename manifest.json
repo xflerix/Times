@@ -1,0 +1,16 @@
+
+{
+  "name": "Мы вместе",
+  "short_name": "Мы вместе",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#fff0f5",
+  "theme_color": "#ff6f91",
+  "icons": [
+    {
+      "src": "heart_icon.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

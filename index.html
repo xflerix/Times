@@ -1,0 +1,72 @@
+
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Мы вместе</title>
+  <link rel="icon" href="heart_icon.png" type="image/png">
+  <link rel="apple-touch-icon" href="heart_icon.png">
+  <link rel="manifest" href="manifest.json">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: linear-gradient(to right, #ff9a9e, #fad0c4);
+      text-align: center;
+      padding: 50px 20px;
+      color: #333;
+    }
+    h1 {
+      font-size: 2.5em;
+    }
+    #days {
+      font-size: 4em;
+      color: #d6336c;
+      margin: 20px 0;
+    }
+    .date-input {
+      margin: 20px 0;
+    }
+    input[type="date"] {
+      font-size: 1.2em;
+      padding: 10px;
+      border: none;
+      border-radius: 8px;
+    }
+    button {
+      font-size: 1.2em;
+      padding: 10px 20px;
+      border: none;
+      border-radius: 8px;
+      background-color: #ff6f91;
+      color: white;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #ff4e7a;
+    }
+  </style>
+</head>
+<body>
+  <h1>Сколько дней мы вместе?</h1>
+  <div class="date-input">
+    <input type="date" id="startDate">
+    <button onclick="calculateDays()">Посчитать</button>
+  </div>
+  <div id="days">0</div>
+
+  <script>
+    function calculateDays() {
+      const start = document.getElementById("startDate").value;
+      if (!start) return;
+      const startDate = new Date(start);
+      const today = new Date();
+      const diffTime = today - startDate;
+      const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+      document.getElementById("days").textContent = diffDays + " дней вместе";
+    }
+  </script>
+</body>
+</html>
