@@ -1,199 +1,287 @@
-
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Block Blast Mini</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Block Blast</title>
   <style>
     body {
-      margin: 0;
-      font-family: Arial, sans-serif;
-      background: #fff3e0;
+      font-family: sans-serif;
       display: flex;
       flex-direction: column;
       align-items: center;
-      padding: 20px;
+      margin-top: 30px;
+      background-color: #f0f0f0;
     }
-    h1 {
-      color: #ff6f00;
-      margin-bottom: 10px;
-    }
-    #game-board {
+    h1 { margin-bottom: 10px; }
+    #score { margin-bottom: 20px; font-size: 20px; }
+    #grid {
       display: grid;
-      grid-template-columns: repeat(9, 30px);
-      grid-template-rows: repeat(9, 30px);
+      grid-template-columns: repeat(10, 32px);
+      grid-template-rows: repeat(10, 32px);
       gap: 2px;
-      margin-top: 20px;
+      margin-bottom: 20px;
     }
     .cell {
-      width: 30px;
-      height: 30px;
-      background: #ffe0b2;
-      border-radius: 4px;
-      border: 1px solid #ff6f00;
+      width: 32px;
+      height: 32px;
+      background-color: #fff;
+      border: 1px solid #ccc;
     }
-    .cell.filled {
-      background: #ff9800;
+    .filled {
+      background-color: #2ecc71;
+      animation: pop 0.2s ease-in-out;
+    }
+    @keyframes pop {
+      0% { transform: scale(0.6); opacity: 0.3; }
+      100% { transform: scale(1); opacity: 1; }
+    }
+    #blocks {
+      display: flex;
+      gap: 20px;
+      flex-wrap: wrap;
+      justify-content: center;
     }
     .block {
-      width: 30px;
-      height: 30px;
-      background-color: #ff9800;
-      position: absolute;
-      cursor: pointer;
+      display: inline-block;
+      padding: 5px;
+      background-color: #ecf0f1;
+      border: 1px solid #ccc;
+      cursor: grab;
     }
-    .back-link, .music-control {
+    .block div {
+      width: 28px;
+      height: 28px;
+      background-color: #3498db;
+      margin: 1px;
+    }
+    .hidden { display: none; }
+    #restart-btn {
+      display: none;
       margin-top: 20px;
-    }
-    .back-link a, .music-control button {
-      text-decoration: none;
-      color: #fff;
-      background: #ff6f00;
       padding: 10px 20px;
-      border: none;
-      border-radius: 10px;
-      font-size: 1em;
-      cursor: pointer;
+      font-size: 16px;
     }
-    .music-control button {
-      margin-left: 10px;
+    @media (max-width: 600px) {
+      #grid {
+        grid-template-columns: repeat(10, 24px);
+        grid-template-rows: repeat(10, 24px);
+        gap: 1px;
+      }
+      .cell {
+        width: 24px;
+        height: 24px;
+      }
+      .block div {
+        width: 20px;
+        height: 20px;
+      }
+      #restart-btn {
+        font-size: 14px;
+        padding: 8px 16px;
+      }
     }
   </style>
 </head>
 <body>
-  <h1>Block Blast Mini</h1>
-  <div class="music-control">
-    <button id="toggle-music">Остановить музыку</button>
-  </div>
-  <div id="game-board"></div>
-  <div class="back-link">
-    <a href="index.html">Назад</a>
-  </div>
-
-  <audio id="bg-music" loop autoplay>
-    <source src="background.mp3" type="audio/mpeg">
-  </audio>
-  <audio id="place-sound">
-    <source src="place.mp3" type="audio/mpeg">
-  </audio>
-
+  <h1>Block Blast</h1>
+  <div id="score">Очки: 0</div>
+  <div id="grid"></div>
+  <div id="blocks"></div>
+  <button id="restart-btn">Сыграть снова</button>
   <script>
-    const board = document.getElementById("game-board");
-    const gridSize = 9;
-    const cells = [];
+    const gridSize = 10;
+    const grid = document.getElementById('grid');
+    const blocksContainer = document.getElementById('blocks');
+    const scoreDisplay = document.getElementById('score');
+    const restartBtn = document.getElementById('restart-btn');
+    let score = 0;
+    const soundPlace = new Audio('place.mp3');
+    const soundLine = new Audio('line.mp3');
+    const soundEnd = new Audio('end.mp3');
 
+    const blockShapes = [
+      [[1]], [[1,1]], [[1],[1]], [[1,1,1]], [[1],[1],[1]], [[1,1],[1,1]],
+      [[1,1,0],[0,1,1]], [[0,1,1],[1,1,0]]
+    ];
+
+    const cells = [];
     for (let i = 0; i < gridSize * gridSize; i++) {
-      const cell = document.createElement("div");
-      cell.classList.add("cell");
-      board.appendChild(cell);
+      const cell = document.createElement('div');
+      cell.classList.add('cell');
+      cell.dataset.index = i;
+      grid.appendChild(cell);
       cells.push(cell);
     }
 
-    const shapes = [
-      [[0, 1], [1, 1], [2, 1], [3, 1]],
-      [[0, 0], [1, 0], [1, 1], [1, 2]],
-      [[0, 0], [0, 1], [1, 0], [1, 1]],
-      [[0, 1], [1, 1], [2, 1], [2, 0]],
-      [[0, 0], [1, 0], [1, 1], [2, 1]],
-      [[0, 0], [0, 1], [0, 2], [1, 1]],
-      [[0, 0], [1, 0], [2, 0], [1, 1]]
-    ];
-
-    let currentShape = [];
-
-    function getRandomShape() {
-      const shape = shapes[Math.floor(Math.random() * shapes.length)];
-      currentShape = shape.map(([x, y]) => [x, y]);
+    function getCell(r, c) {
+      if (r < 0 || r >= gridSize || c < 0 || c >= gridSize) return null;
+      return cells[r * gridSize + c];
     }
 
-    function drawShape() {
-      const block = document.createElement("div");
-      block.classList.add("block");
-      document.body.appendChild(block);
-      block.style.left = `${Math.floor(gridSize / 2) * 30}px`;
-      block.style.top = "0px";
+    function placeShape(index, shape) {
+      const row = Math.floor(index / gridSize);
+      const col = index % gridSize;
+      const coords = [];
 
-      let posX = Math.floor(gridSize / 2);
-      let posY = 0;
-
-      block.addEventListener("mousedown", (e) => {
-        const offsetX = e.clientX - block.offsetLeft;
-        const offsetY = e.clientY - block.offsetTop;
-
-        function moveBlock(e) {
-          block.style.left = `${e.clientX - offsetX}px`;
-          block.style.top = `${e.clientY - offsetY}px`;
-        }
-
-        function stopMoving() {
-          document.removeEventListener("mousemove", moveBlock);
-          document.removeEventListener("mouseup", stopMoving);
-          placeBlock();
-        }
-
-        document.addEventListener("mousemove", moveBlock);
-        document.addEventListener("mouseup", stopMoving);
-      });
-
-      function placeBlock() {
-        currentShape.forEach(([dx, dy]) => {
-          const x = posX + dx;
-          const y = posY + dy;
-          if (x >= 0 && x < gridSize && y >= 0 && y < gridSize) {
-            cells[y * gridSize + x].classList.add("filled");
+      for (let i = 0; i < shape.length; i++) {
+        for (let j = 0; j < shape[i].length; j++) {
+          if (shape[i][j]) {
+            const r = row + i;
+            const c = col + j;
+            const cell = getCell(r, c);
+            if (!cell || cell.classList.contains('filled')) return false;
+            coords.push(cell);
           }
-        });
-        document.getElementById("place-sound").play();
-        checkForFullRows();
+        }
       }
+      coords.forEach(c => c.classList.add('filled'));
+      soundPlace.play();
+      return true;
+    }
 
-      function checkForFullRows() {
-        for (let row = 0; row < gridSize; row++) {
-          let filled = true;
-          for (let col = 0; col < gridSize; col++) {
-            if (!cells[row * gridSize + col].classList.contains("filled")) {
-              filled = false;
-              break;
+    function clearLines() {
+      let cleared = 0;
+      for (let i = 0; i < gridSize; i++) {
+        let rowFull = true;
+        let colFull = true;
+        for (let j = 0; j < gridSize; j++) {
+          if (!getCell(i, j).classList.contains('filled')) rowFull = false;
+          if (!getCell(j, i).classList.contains('filled')) colFull = false;
+        }
+        if (rowFull) {
+          for (let j = 0; j < gridSize; j++) getCell(i, j).classList.remove('filled');
+          cleared++;
+        }
+        if (colFull) {
+          for (let j = 0; j < gridSize; j++) getCell(j, i).classList.remove('filled');
+          cleared++;
+        }
+      }
+      if (cleared > 0) {
+        soundLine.play();
+        score += cleared * 10;
+        updateScore();
+      }
+    }
+
+    function updateScore() {
+      scoreDisplay.textContent = 'Очки: ' + score;
+    }
+
+    function createBlock(shape) {
+      const block = document.createElement('div');
+      block.classList.add('block');
+      block.dataset.shape = JSON.stringify(shape);
+      shape.forEach(row => {
+        const rowDiv = document.createElement('div');
+        row.forEach(cell => {
+          const el = document.createElement('div');
+          if (!cell) el.style.visibility = 'hidden';
+          rowDiv.appendChild(el);
+        });
+        block.appendChild(rowDiv);
+      });
+      block.draggable = true;
+      block.addEventListener('dragstart', e => {
+        e.dataTransfer.setData('shape', block.dataset.shape);
+      });
+      blocksContainer.appendChild(block);
+    }
+
+    function generateBlocks() {
+      blocksContainer.innerHTML = '';
+      for (let i = 0; i < 3; i++) {
+        const shape = blockShapes[Math.floor(Math.random() * blockShapes.length)];
+        createBlock(shape);
+      }
+    }
+
+    function canPlaceShape(startIndex, shape) {
+      const row = Math.floor(startIndex / gridSize);
+      const col = startIndex % gridSize;
+      for (let i = 0; i < shape.length; i++) {
+        for (let j = 0; j < shape[i].length; j++) {
+          if (shape[i][j]) {
+            const r = row + i;
+            const c = col + j;
+            const cell = getCell(r, c);
+            if (!cell || cell.classList.contains('filled')) return false;
+          }
+        }
+      }
+      return true;
+    }
+
+    function checkGameOver() {
+      const blocks = [...blocksContainer.children].filter(b => !b.classList.contains('hidden'));
+      for (const block of blocks) {
+        const shape = JSON.parse(block.dataset.shape);
+        for (let i = 0; i < gridSize * gridSize; i++) {
+          if (canPlaceShape(i, shape)) return false;
+        }
+      }
+      return true;
+    }
+
+    function showGameOver() {
+      const msg = document.createElement('div');
+      msg.id = 'game-over-msg';
+      msg.textContent = 'Игра окончена!';
+      msg.style.fontSize = '28px';
+      msg.style.color = '#e74c3c';
+      msg.style.marginTop = '20px';
+      document.body.appendChild(msg);
+      soundEnd.play();
+      cells.forEach(c => c.replaceWith(c.cloneNode(true)));
+      blocksContainer.innerHTML = '';
+      restartBtn.style.display = 'inline-block';
+    }
+
+    restartBtn.addEventListener('click', () => {
+      cells.forEach(cell => cell.classList.remove('filled'));
+      const msg = document.getElementById('game-over-msg');
+      if (msg) msg.remove();
+      cells.forEach(cell => {
+        cell.addEventListener('dragover', e => e.preventDefault());
+        cell.addEventListener('drop', e => {
+          e.preventDefault();
+          const shape = JSON.parse(e.dataTransfer.getData('shape'));
+          const success = placeShape(parseInt(cell.dataset.index), shape);
+          if (success) {
+            clearLines();
+            e.target.closest('.block').classList.add('hidden');
+            if ([...blocksContainer.children].every(el => el.classList.contains('hidden'))) {
+              generateBlocks();
+              if (checkGameOver()) showGameOver();
             }
           }
-          if (filled) {
-            clearRow(row);
+        });
+      });
+      score = 0;
+      updateScore();
+      generateBlocks();
+      restartBtn.style.display = 'none';
+    });
+
+    cells.forEach(cell => {
+      cell.addEventListener('dragover', e => e.preventDefault());
+      cell.addEventListener('drop', e => {
+        e.preventDefault();
+        const shape = JSON.parse(e.dataTransfer.getData('shape'));
+        const success = placeShape(parseInt(cell.dataset.index), shape);
+        if (success) {
+          clearLines();
+          e.target.closest('.block').classList.add('hidden');
+          if ([...blocksContainer.children].every(el => el.classList.contains('hidden'))) {
+            generateBlocks();
+            if (checkGameOver()) showGameOver();
           }
         }
-      }
+      });
+    });
 
-      function clearRow(row) {
-        for (let col = 0; col < gridSize; col++) {
-          cells[row * gridSize + col].classList.remove("filled");
-        }
-      }
-    }
-
-    getRandomShape();
-    drawShape();
-
-    const bgMusic = document.getElementById("bg-music");
-    const toggleBtn = document.getElementById("toggle-music");
-
-    function updateMusicState() {
-      const isPlaying = localStorage.getItem("music") !== "off";
-      if (isPlaying) {
-        bgMusic.play();
-        toggleBtn.textContent = "Остановить музыку";
-      } else {
-        bgMusic.pause();
-        toggleBtn.textContent = "Включить музыку";
-      }
-    }
-
-    toggleBtn.onclick = () => {
-      const current = localStorage.getItem("music");
-      localStorage.setItem("music", current === "off" ? "on" : "off");
-      updateMusicState();
-    };
-
-    window.onload = updateMusicState;
+    generateBlocks();
   </script>
 </body>
 </html>
