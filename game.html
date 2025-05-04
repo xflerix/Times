@@ -126,6 +126,10 @@
   <div id="blocks"></div>
   <button id="restart-btn">Сыграть снова</button>
   <script>
+const soundPlace = new Audio('place.mp3');
+const soundClear = new Audio('line.mp3');
+const soundEnd = new Audio('end.mp3');
+
     const gridSize = 10;
     const grid = document.getElementById('grid');
     const blocksContainer = document.getElementById('blocks');
@@ -193,6 +197,8 @@
       }
       if (cleared > 0) {
         score += cleared * 10;
+        soundClear.play();
+        updateScore();
         updateScore();
       }
     }
@@ -218,6 +224,14 @@
       block.draggable = true;
       block.addEventListener('dragstart', e => {
         e.dataTransfer.setData('shape', block.dataset.shape);
+    const preview = block.cloneNode(true);
+    preview.style.position = 'absolute';
+    preview.style.pointerEvents = 'none';
+    preview.style.opacity = '0.6';
+    document.body.appendChild(preview);
+    e.dataTransfer.setDragImage(preview, 0, 0);
+    setTimeout(() => document.body.removeChild(preview), 0);
+    
       });
       blocksContainer.appendChild(block);
     }
@@ -285,12 +299,17 @@
         e.preventDefault();
         const shape = JSON.parse(e.dataTransfer.getData('shape'));
         const success = placeShape(parseInt(cell.dataset.index), shape);
-        if (success) {
+        
+if (success) {
+  soundPlace.play();
+  clearLines();
+  e.target.closest('.block').classList.add('hidden');
+
           clearLines();
           e.target.closest('.block').classList.add('hidden');
           if ([...blocksContainer.children].every(el => el.classList.contains('hidden'))) {
             generateBlocks();
-            if (checkGameOver()) showGameOver();
+            if (checkGameOver()) { soundEnd.play(); showGameOver(); }
           }
         }
       });
