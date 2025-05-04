@@ -5,6 +5,18 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Block Blast Deluxe</title>
   <style>
+    .block {
+      display: inline-grid;
+      grid-auto-rows: 28px;
+      background: #fefefe;
+      border-radius: 8px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+      cursor: grab;
+    }
+    .block-row {
+      display: flex;
+    }
+    
     body {
       font-family: 'Segoe UI', sans-serif;
       background: linear-gradient(to bottom, #dfe9f3, #ffffff);
@@ -99,6 +111,16 @@
 </head>
 <body>
   <h1>Block Blast Deluxe</h1>
+    <a href="index.html" style="
+      margin-bottom: 20px;
+      padding: 10px 20px;
+      background: #bdc3c7;
+      color: #2c3e50;
+      text-decoration: none;
+      border-radius: 6px;
+      font-size: 16px;
+      display: inline-block;
+    ">Назад</a>
   <div id="score">Очки: 0</div>
   <div id="grid"></div>
   <div id="blocks"></div>
@@ -185,6 +207,7 @@
       block.dataset.shape = JSON.stringify(shape);
       shape.forEach(row => {
         const rowDiv = document.createElement('div');
+        rowDiv.classList.add("block-row");
         row.forEach(cell => {
           const el = document.createElement('div');
           if (!cell) el.style.visibility = 'hidden';
