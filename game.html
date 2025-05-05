@@ -3,144 +3,80 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Block Blast Deluxe</title>
+  <title>Block Blast 8x8</title>
   <style>
+    body {
+      font-family: sans-serif;
+      background: #f8f8f8;
+      text-align: center;
+      margin: 0;
+      padding: 20px;
+    }
+    #grid {
+      display: grid;
+      grid-template-columns: repeat(8, 34px);
+      grid-template-rows: repeat(8, 34px);
+      gap: 2px;
+      margin: 20px auto;
+    }
+    .cell {
+      width: 34px;
+      height: 34px;
+      background: #ddd;
+      border-radius: 4px;
+    }
+    .filled {
+      background: #3498db;
+    }
+    #blocks {
+      display: flex;
+      justify-content: center;
+      gap: 20px;
+      flex-wrap: wrap;
+    }
     .block {
       display: inline-grid;
       grid-auto-rows: 28px;
-      background: #fefefe;
-      border-radius: 8px;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+      padding: 4px;
+      background: white;
+      border-radius: 6px;
+      box-shadow: 0 0 4px rgba(0,0,0,0.1);
       cursor: grab;
     }
     .block-row {
       display: flex;
     }
-    
-    body {
-      font-family: 'Segoe UI', sans-serif;
-      background: linear-gradient(to bottom, #dfe9f3, #ffffff);
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      margin: 0;
-      padding: 20px;
-    }
-    h1 {
-      color: #2c3e50;
-      margin-bottom: 10px;
-    }
-    #score {
-      font-size: 22px;
-      margin-bottom: 15px;
-      color: #34495e;
-    }
-    #grid {
-      display: grid;
-      grid-template-columns: repeat(10, 34px);
-      grid-template-rows: repeat(10, 34px);
-      gap: 2px;
-      margin-bottom: 20px;
-    }
-    .cell {
-      width: 34px;
-      height: 34px;
-      background-color: #ecf0f1;
-      border-radius: 6px;
-      box-shadow: inset 0 0 4px #bdc3c7;
-    }
-    .filled {
-      background-color: #2980b9;
-      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
-      transition: transform 0.2s;
-      animation: fadeIn 0.3s;
-    }
-    @keyframes fadeIn {
-      from { opacity: 0; transform: scale(0.7); }
-      to { opacity: 1; transform: scale(1); }
-    }
-    #blocks {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 20px;
-      justify-content: center;
-    }
-    .block {
-      display: inline-block;
-      padding: 6px;
-      background: #fefefe;
-      border-radius: 8px;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
-      cursor: grab;
-    }
     .block div {
       width: 28px;
       height: 28px;
-      background-color: #3498db;
+      background: #2980b9;
       margin: 1px;
       border-radius: 4px;
-    }
-    .hidden {
-      display: none;
-    }
-    #restart-btn {
-      margin-top: 20px;
-      padding: 12px 24px;
-      font-size: 16px;
-      background-color: #27ae60;
-      color: white;
-      border: none;
-      border-radius: 6px;
-      cursor: pointer;
-    }
-    @media (max-width: 600px) {
-      #grid {
-        grid-template-columns: repeat(10, 26px);
-        grid-template-rows: repeat(10, 26px);
-      }
-      .cell {
-        width: 26px;
-        height: 26px;
-      }
-      .block div {
-        width: 20px;
-        height: 20px;
-      }
     }
   </style>
 </head>
 <body>
-  <h1>Block Blast Deluxe</h1>
-    <a href="index.html" style="
-      margin-bottom: 20px;
-      padding: 10px 20px;
-      background: #bdc3c7;
-      color: #2c3e50;
-      text-decoration: none;
-      border-radius: 6px;
-      font-size: 16px;
-      display: inline-block;
-    ">Назад</a>
+  <h1>Block Blast 8x8</h1>
+  <a href="index.html">Назад</a>
   <div id="score">Очки: 0</div>
   <div id="grid"></div>
   <div id="blocks"></div>
-  <button id="restart-btn">Сыграть снова</button>
-  <script>
-const soundPlace = new Audio('place.mp3');
-const soundClear = new Audio('line.mp3');
-const soundEnd = new Audio('end.mp3');
 
-    const gridSize = 10;
+  <script>
+    const gridSize = 8;
     const grid = document.getElementById('grid');
     const blocksContainer = document.getElementById('blocks');
     const scoreDisplay = document.getElementById('score');
-    const restartBtn = document.getElementById('restart-btn');
     let score = 0;
+
+    const soundPlace = new Audio('place.mp3');
+    const soundClear = new Audio('line.mp3');
+    const soundEnd = new Audio('end.mp3');
 
     const blockShapes = [
       [[1]], [[1,1]], [[1],[1]], [[1,1,1]], [[1],[1],[1]], [[1,1],[1,1]],
       [[1,1,0],[0,1,1]], [[0,1,1],[1,1,0]], [[1,1,1],[0,1,0]], [[1,0],[1,1]],
-      [[0,1],[1,1]], [[1,1,1,1]], [[1],[1],[1],[1]], [[1,1,1],[1,0,0]], [[1,1,1],[0,0,1]]
+      [[0,1],[1,1]]
     ];
 
     const cells = [];
@@ -174,6 +110,7 @@ const soundEnd = new Audio('end.mp3');
         }
       }
       coords.forEach(c => c.classList.add('filled'));
+      soundPlace.play();
       return true;
     }
 
@@ -196,9 +133,8 @@ const soundEnd = new Audio('end.mp3');
         }
       }
       if (cleared > 0) {
-        score += cleared * 10;
+        score += cleared * 5;
         soundClear.play();
-        updateScore();
         updateScore();
       }
     }
@@ -213,7 +149,7 @@ const soundEnd = new Audio('end.mp3');
       block.dataset.shape = JSON.stringify(shape);
       shape.forEach(row => {
         const rowDiv = document.createElement('div');
-        rowDiv.classList.add("block-row");
+        rowDiv.classList.add('block-row');
         row.forEach(cell => {
           const el = document.createElement('div');
           if (!cell) el.style.visibility = 'hidden';
@@ -224,14 +160,13 @@ const soundEnd = new Audio('end.mp3');
       block.draggable = true;
       block.addEventListener('dragstart', e => {
         e.dataTransfer.setData('shape', block.dataset.shape);
-    const preview = block.cloneNode(true);
-    preview.style.position = 'absolute';
-    preview.style.pointerEvents = 'none';
-    preview.style.opacity = '0.6';
-    document.body.appendChild(preview);
-    e.dataTransfer.setDragImage(preview, 0, 0);
-    setTimeout(() => document.body.removeChild(preview), 0);
-    
+        const preview = block.cloneNode(true);
+        preview.style.position = 'absolute';
+        preview.style.pointerEvents = 'none';
+        preview.style.opacity = '0.6';
+        document.body.appendChild(preview);
+        e.dataTransfer.setDragImage(preview, 0, 0);
+        setTimeout(() => document.body.removeChild(preview), 0);
       });
       blocksContainer.appendChild(block);
     }
@@ -273,25 +208,14 @@ const soundEnd = new Audio('end.mp3');
 
     function showGameOver() {
       const msg = document.createElement('div');
-      msg.id = 'game-over-msg';
       msg.textContent = 'Игра окончена!';
-      msg.style.fontSize = '28px';
+      msg.style.fontSize = '24px';
       msg.style.color = '#c0392b';
       msg.style.marginTop = '20px';
       document.body.appendChild(msg);
       blocksContainer.innerHTML = '';
-      restartBtn.style.display = 'inline-block';
+      soundEnd.play();
     }
-
-    restartBtn.addEventListener('click', () => {
-      cells.forEach(cell => cell.classList.remove('filled'));
-      const msg = document.getElementById('game-over-msg');
-      if (msg) msg.remove();
-      score = 0;
-      updateScore();
-      generateBlocks();
-      restartBtn.style.display = 'none';
-    });
 
     cells.forEach(cell => {
       cell.addEventListener('dragover', e => e.preventDefault());
@@ -299,17 +223,14 @@ const soundEnd = new Audio('end.mp3');
         e.preventDefault();
         const shape = JSON.parse(e.dataTransfer.getData('shape'));
         const success = placeShape(parseInt(cell.dataset.index), shape);
-        
-if (success) {
-  soundPlace.play();
-  clearLines();
-  e.target.closest('.block').classList.add('hidden');
-
+        if (success) {
           clearLines();
           e.target.closest('.block').classList.add('hidden');
           if ([...blocksContainer.children].every(el => el.classList.contains('hidden'))) {
             generateBlocks();
-            if (checkGameOver()) { soundEnd.play(); showGameOver(); }
+            if (checkGameOver()) {
+              showGameOver();
+            }
           }
         }
       });
