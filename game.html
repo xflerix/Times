@@ -2,15 +2,16 @@
 <html lang="ru">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Block Blast 8x8</title>
   <style>
     body {
       font-family: sans-serif;
-      background: #f8f8f8;
+      background: url('background.jpg') no-repeat center center fixed;
+      background-size: cover;
       text-align: center;
       margin: 0;
       padding: 20px;
+      color: #fff;
     }
     #grid {
       display: grid;
@@ -53,14 +54,28 @@
       margin: 1px;
       border-radius: 4px;
     }
+    #highscores {
+      margin-top: 20px;
+      background: rgba(0,0,0,0.5);
+      padding: 10px;
+      border-radius: 10px;
+      display: inline-block;
+    }
+    #level {
+      margin-top: 10px;
+      font-size: 18px;
+    }
   </style>
 </head>
 <body>
+  <audio id="bgmusic" src="background.mp3" autoplay loop></audio>
   <h1>Block Blast 8x8</h1>
   <a href="index.html">Назад</a>
   <div id="score">Очки: 0</div>
+  <div id="level">Уровень: 1</div>
   <div id="grid"></div>
   <div id="blocks"></div>
+  <div id="highscores"><strong>Рекорды:</strong><ul id="scorelist"></ul></div>
 
   <script>
     const gridSize = 8;
@@ -141,6 +156,10 @@
 
     function updateScore() {
       scoreDisplay.textContent = 'Очки: ' + score;
+      let level = Math.floor(score / 50) + 1;
+      document.getElementById('level').textContent = 'Уровень: ' + level;
+      saveHighScore(score);
+      showHighScores();
     }
 
     function createBlock(shape) {
@@ -160,13 +179,6 @@
       block.draggable = true;
       block.addEventListener('dragstart', e => {
         e.dataTransfer.setData('shape', block.dataset.shape);
-        const preview = block.cloneNode(true);
-        preview.style.position = 'absolute';
-        preview.style.pointerEvents = 'none';
-        preview.style.opacity = '0.6';
-        document.body.appendChild(preview);
-        e.dataTransfer.setDragImage(preview, 0, 0);
-        setTimeout(() => document.body.removeChild(preview), 0);
       });
       blocksContainer.appendChild(block);
     }
@@ -217,6 +229,24 @@
       soundEnd.play();
     }
 
+    function saveHighScore(newScore) {
+      let scores = JSON.parse(localStorage.getItem('highscores') || '[]');
+      scores.push(newScore);
+      scores = scores.sort((a,b) => b - a).slice(0, 5);
+      localStorage.setItem('highscores', JSON.stringify(scores));
+    }
+
+    function showHighScores() {
+      let scores = JSON.parse(localStorage.getItem('highscores') || '[]');
+      const list = document.getElementById('scorelist');
+      list.innerHTML = "";
+      scores.forEach(s => {
+        const li = document.createElement('li');
+        li.textContent = s;
+        list.appendChild(li);
+      });
+    }
+
     cells.forEach(cell => {
       cell.addEventListener('dragover', e => e.preventDefault());
       cell.addEventListener('drop', e => {
@@ -237,6 +267,7 @@
     });
 
     generateBlocks();
+    showHighScores();
   </script>
 </body>
 </html>
